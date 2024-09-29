@@ -1,17 +1,17 @@
 #/bin/bash
 
-# Amazing Trianlges: A program which calculates the 
-#                    third side of a manager with an angle
+# Collatz Conjecture: A program which calculates the 
+#                     collatz conjecture for a given number
 # Copyright (C) <2024>  <Kshitij Pingle>
 
-# This file is part of the software program "Amazing managers".
+# This file is part of the software program "Collatz Conjecture".
 
-# "Amazing managers" is free software: you can redistribute it and/or modify
+# "Collatz Conjecture" is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# "Amazing managers" is distributed in the hope that it will be useful,
+# "Collatz Conjecture" is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -31,10 +31,3 @@ rm *.out
 
 #Compile output_array.c
 gcc -o collatz collatz.c
-
-#Compile compute_variance.c
-#gcc -m64 -Wall -no-pie -o compute_variance.o -std=c2x -c compute_variance.c
-
-#Execute the program that calculates a van's manager speed
-#chmod +x assign3.out
-#./collatz

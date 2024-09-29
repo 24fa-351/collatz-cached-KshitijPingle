@@ -2,7 +2,7 @@
 //CWID: 885626978
 //CPSC 351
 //Assignment 4 - Collatz Conjecture
-//17 September 2024
+//28 September 2024
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,45 +11,37 @@
 #include "collatz.h"
 
 //Collatz Conjecture function
-unsigned long long collatz_provider(unsigned long long rand_num) {
+unsigned long long collatz_provider(unsigned long long num) {
 
-    unsigned long long count = 0;
+    unsigned long long step_count = 0;
 
     //Start Collatz Conjecture
     while (1) {
 
-        //DEBUGING:
-        if (rand_num == 0) {
-            printf("\n\nDEBUGING: Rand Num = 0\n\n");
-            return count;
-        }
-
-        //Break statement
-        if (rand_num == 1) {
-            //printf("\n\nDebug: Rand num is %llu\n\n", rand_num);
+        if (num == 1) {
             break;
         }
-        else if ((rand_num % 2) == 0) {
+        else if ((num % 2) == 0) {
             //num is even
-            rand_num = rand_num / 2;
+            num = num / 2;
         }
         else {
             //num is odd
-            rand_num = (3 * rand_num) + 1;
+            num = (3 * num) + 1;
         }
         
-        ++count;
+        ++step_count;
     }
 
-    return count;
+    return step_count;
 }
+
 
 //Least Recently Used Caching function
 unsigned long long collatz_lru(unsigned long long num) {
 
     //Check if we already have value in array
     for (unsigned long long i = 0; i < array_size; ++i) {
-        //printf("\nDEBUG : For loop executed %llu times", i);
 
         if (num == index_array[i]) {
 
@@ -66,9 +58,9 @@ unsigned long long collatz_lru(unsigned long long num) {
         }
     }
 
-    //We didn't find it in array, calculate it
     cache_misses++;
 
+    //We didn't find it in array, calculate it
     unsigned long long step_count = collatz_provider(num);
 
     if (array_size == Max_array_size) {
@@ -84,7 +76,7 @@ unsigned long long collatz_lru(unsigned long long num) {
         }
 
         index_array[last_elem_pos] = num;
-        cache_array[last_elem_pos] = step_count;        //cache_array and index_array should always be correspondingly arranged
+        cache_array[last_elem_pos] = step_count;
 
         //Move all elements in policy array by one
         for (unsigned long long i = array_size; i > 0; --i) {
@@ -113,50 +105,42 @@ unsigned long long collatz_lru(unsigned long long num) {
     return step_count;
 }
 
-//Random Replacement Caching function
-unsigned long long collatz_rr(unsigned long long rand_num) {
 
-    unsigned long long count = 0;
-    unsigned long long rand_num_2 = 0;
+//Random Replacement Caching function
+unsigned long long collatz_rr(unsigned long long num) {
 
     //Check if we already have it
-    for(unsigned long long i = 0; i < sizeof(cache_array); ++i) {
+    for(unsigned long long i = 0; i < array_size; ++i) {
 
-        printf("\nDEBUG : Made it till here : 'i' is %llu, size of cache array : %lu\n\n", i, sizeof(cache_array));
-
-        if (rand_num == cache_array[i]) {
-            return index_array[i];
+        if (num == index_array[i]) {
+            ++cache_hits;
+            return cache_array[i];
         }
+    }
 
-        printf("Made it after if");
-    } //This for loop will take O(n); n = Max_array_size
+    //We don't already have it, calculate it
+    unsigned long long step_count = collatz_provider(num);
 
-    //If we haven't found it, call collatz
-    count = collatz_provider(rand_num);
+    ++cache_misses;
 
-    //Save to cache_array
     if (array_size == Max_array_size) {
-        //Since array is full, start evicting
-        //Defualt Policy : LRU (Least Recently Used)
-        //My CWID: 88569678 - RR (Random Replacement)
+        //Evict a number at a random position
 
-        //Get Even Random Number for RR
-        rand_num_2 = (rand() % ((Max_array_size - 2) + 1)) * 2; //'Max_array_size - 2' is max to make sure we have space
+        //Get Random Position for RR
+        unsigned long long rand_pos = rand() % ((array_size - 1) + 1); //'array_size - 1' is max to make sure we have space
 
-        //Replace in cache array
-        index_array[rand_num_2] = rand_num;
-        cache_array[rand_num_2] = count;   //Collatz count for rand_num
+        index_array[rand_pos] = num;
+        cache_array[rand_pos] = step_count;
     }
     else {
-        //Array is not full
-
-        index_array[array_size] = rand_num;
-        cache_array[array_size] = count;
+        
+        index_array[array_size] = num;
+        cache_array[array_size] = step_count;
 
         ++array_size;
     }
 
-    return count;
+    return step_count;
 }
 
 int main(unsigned long long argc, char *argv[]) {
@@ -172,11 +156,12 @@ int main(unsigned long long argc, char *argv[]) {
     //Print header row in file
     fprintf(fptr, "Number, Steps\n");
 
-    //Set srand() for rand()
-    srand(time(NULL));
-
     //Initialize cache method to LRU by default
     CacheMethod collatz = collatz_lru;
+
+    if (argc > 3) {
+        collatz = collatz_rr;
+    }
 
 
     //Main loop
@@ -196,30 +181,24 @@ int main(unsigned long long argc, char *argv[]) {
 
         }
 
-        unsigned long long num = rand_num;
-        printf("\nRandom number is %llu\n", rand_num);
-
         //Call collatz function -Seg fault this line
-        unsigned long long count = collatz(rand_num);
+        unsigned long long step_count = collatz(rand_num);
 
-        
-
-        printf("Collatz conjecture with %llu took %llu steps\n", rand_num, count);
+        // printf("Collatz conjecture with %llu took %llu steps\n", rand_num, step_count);
 
         //Write to csv file
-        fprintf(fptr, "%llu, %llu\n", rand_num, count);
+        fprintf(fptr, "%llu, %llu\n", rand_num, step_count);
 
-        count = 0;
+        step_count = 0;
     }
 
     fclose(fptr);
 
-    //Calculate hit percent
     double cache_hit_percent = (double) (cache_hits * 100) / n;
 
     printf("\nCache hits = %llu, Cache misses = %llu, N = %llu", cache_hits, cache_misses, n);
 
-    printf("\n\nCache hit percent : %3.2lf", cache_hit_percent);
+    printf("\nCache hit percent : %3.2lf\n", cache_hit_percent);
 
     return 0;
 }
